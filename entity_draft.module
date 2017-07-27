@@ -36,7 +36,6 @@ function entity_draft_form_alter(&$form, FormStateInterface $form_state, $form_i
     return;
   }
 
-
   if ($form_object->getEntity() instanceof ConfigEntityBundleBase &&
     !$form_object instanceof EntityDeleteForm) {
 
