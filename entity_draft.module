@@ -108,6 +108,13 @@ function entity_draft_form_alter(&$form, FormStateInterface $form_state, $form_i
       ],
     ];
 
+    $form['entity_draft']['entity_draft_redirect'] = [
+      '#type' => 'textfield',
+      '#title' => t('Redirect'),
+      '#description' => t('The route to redirect to. Leave blank to reload page.'),
+      '#default_value' => $entity->getThirdPartySetting('entity_draft', 'entity_draft_redirect', ''),
+    ];
+
     $form['actions']['submit']['#submit'][] = 'entity_draft_entity_type_submit';
   }
   elseif (isset($form['#entity_builders'])) {
@@ -204,6 +211,11 @@ function entity_draft_entity_save_draft_edit_form(&$form, FormStateInterface $fo
   if ($entity_draft_message !== FALSE) {
     drupal_set_message(check_markup($entity_draft_message['value'], $entity_draft_message['format']));
   }
+
+  $entity_draft_redirect = $config->getThirdPartySetting('entity_draft', 'entity_draft_redirect', '');
+  if (!empty($entity_draft_redirect)) {
+    $form_state->setRedirect($entity_draft_redirect);
+  }
 }
 
 /**
@@ -216,6 +228,7 @@ function entity_draft_entity_type_submit(array &$form, FormStateInterface $form_
     ->setThirdPartySetting('entity_draft', 'entity_draft_submit', $form_state->getValue('entity_draft_submit'))
     ->setThirdPartySetting('entity_draft', 'entity_draft_help', $form_state->getValue('entity_draft_help'))
     ->setThirdPartySetting('entity_draft', 'entity_draft_message', $form_state->getValue('entity_draft_message'))
+    ->setThirdPartySetting('entity_draft', 'entity_draft_redirect', $form_state->getValue('entity_draft_redirect'))
     ->save();
 
   // Set required handling using controlled_fields.
