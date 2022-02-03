@@ -10,5 +10,14 @@
     "issues": "https://www.drupal.org/project/issues/entity_draft",
     "source": "http://cgit.drupalcode.org/entity_draft"
   },
-  "require": {}
+  "require": {
+    "drupal/controlled_fields": "2.0.x-dev",
+    "drupal/filter_form_values": "2.0.x-dev"
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
+    }
+  ]
 }
