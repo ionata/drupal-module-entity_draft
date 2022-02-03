@@ -141,6 +141,10 @@ function entity_draft_entity_edit_form_alter(&$form, FormStateInterface $form_st
 
   $config = $entity_type_manager->getStorage($bundle_entity_type)->load($bundle);
 
+  if (empty($config->getThirdPartySetting('entity_draft', 'enable_draft'))) {
+    return;
+  }
+
   $form['actions']['draft'] = [
     '#type' => 'submit',
     '#value' => $config->getThirdPartySetting('entity_draft', 'entity_draft_submit'),
