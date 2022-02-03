@@ -31,6 +31,7 @@ function entity_draft_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_form_alter().
  */
 function entity_draft_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  /** @var \Drupal\Core\Form\EntityForm $form_object */
   $form_object = $form_state->getFormObject();
 
   if (!method_exists($form_object, 'getEntity')) {
@@ -171,7 +172,9 @@ function entity_draft_entity_edit_form_alter(&$form, FormStateInterface $form_st
  * Submit entity edit form.
  */
 function entity_draft_entity_submit_edit_form(&$form, FormStateInterface $form_state) {
-  $entity = $form_state->getFormObject()->getEntity();
+  /** @var \Drupal\Core\Form\EntityForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->getEntity();
   $entity->set('is_draft', FALSE);
   $entity->save();
 }
@@ -190,7 +193,9 @@ function entity_draft_entity_validate_draft_edit_form(&$form, FormStateInterface
  * Save entity via the draft button.
  */
 function entity_draft_entity_save_draft_edit_form(&$form, FormStateInterface $form_state) {
-  $entity = $form_state->getFormObject()->getEntity();
+    /** @var \Drupal\Core\Form\EntityForm $form_object */
+    $form_object = $form_state->getFormObject();
+    $entity = $form_object->getEntity();
   $form_display = $form_state->getStorage()['form_display'];
 
   $bundle = $form_display->getTargetBundle();
@@ -202,14 +207,16 @@ function entity_draft_entity_save_draft_edit_form(&$form, FormStateInterface $fo
 
   $entity->set('is_draft', TRUE);
   if ($entity->hasField('status')) {
-    $entity->set('status', $config->getThirdPartySetting('entity_draft', 'entity_draft_unpublished'));
+    $entity->set('status', !$config->getThirdPartySetting('entity_draft', 'entity_draft_unpublished'));
   }
 
   $entity->save();
 
   $entity_draft_message = $config->getThirdPartySetting('entity_draft', 'entity_draft_message', FALSE);
   if ($entity_draft_message !== FALSE) {
-    drupal_set_message(check_markup($entity_draft_message['value'], $entity_draft_message['format']));
+    \Drupal::messenger()->addMessage(
+      t(check_markup($entity_draft_message['value'], $entity_draft_message['format']))
+    );
   }
 
   $entity_draft_redirect = $config->getThirdPartySetting('entity_draft', 'entity_draft_redirect', '');
@@ -222,7 +229,9 @@ function entity_draft_entity_save_draft_edit_form(&$form, FormStateInterface $fo
  * Custom entity type form submit handling.
  */
 function entity_draft_entity_type_submit(array &$form, FormStateInterface $form_state) {
-  $entity = $form_state->getFormObject()->getEntity();
+  /** @var \Drupal\Core\Form\EntityForm $form_object */
+  $form_object = $form_state->getFormObject();
+  $entity = $form_object->getEntity();
   $entity->setThirdPartySetting('entity_draft', 'enable_draft', $form_state->getValue('enable_draft'))
     ->setThirdPartySetting('entity_draft', 'entity_draft_unpublished', $form_state->getValue('entity_draft_unpublished'))
     ->setThirdPartySetting('entity_draft', 'entity_draft_submit', $form_state->getValue('entity_draft_submit'))
@@ -231,16 +240,19 @@ function entity_draft_entity_type_submit(array &$form, FormStateInterface $form_
     ->setThirdPartySetting('entity_draft', 'entity_draft_redirect', $form_state->getValue('entity_draft_redirect'))
     ->save();
 
+
   // Set required handling using controlled_fields.
   $config_entity_type = $entity->getEntityType();
   $bundle_of = $config_entity_type->getBundleOf();
   $field_definitions = controlled_fields_fetch_field_definitions($bundle_of, $entity->get('type'));
 
-  $entity_manager = \Drupal::entityManager();
-  $entity_form_modes = $entity_manager->getFormModes($bundle_of);
+  $entity_manager = \Drupal::entityTypeManager();
+  $entity_display_repository = \Drupal::service('entity_display.repository');
+  $entity_form_modes = $entity_display_repository->getFormModes($bundle_of);
   $valid_form_modes = ['default'];
 
   foreach ($entity_form_modes as $form_mode_id => $form_mode) {
+    /** @var Drupal\Core\Entity\Entity\EntityFormDisplay $entity_form_display */
     $entity_form_display = $entity_manager->getStorage('entity_form_display')->load($bundle_of . '.' . $entity->get('type') . '.' . $form_mode_id);
     if ($entity_form_display !== NULL && $entity_form_display->get('id')) {
       array_push($valid_form_modes, $form_mode_id);
@@ -259,7 +271,7 @@ function entity_draft_entity_type_submit(array &$form, FormStateInterface $form_
  */
 function entity_draft_entity_base_field_info(EntityTypeInterface $entity_type) {
   // Add in is_draft to all bundle enabled entities.
-  $entity_manager = \Drupal::entityManager();
+  $entity_manager = \Drupal::entityTypeManager();
   foreach ($entity_manager->getDefinitions() as $entity_type_id => $entity_type_config) {
 
     $bundle_of = $entity_type_config->get('bundle_of');
