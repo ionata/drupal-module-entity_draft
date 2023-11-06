@@ -11,8 +11,8 @@
     "source": "http://cgit.drupalcode.org/entity_draft"
   },
   "require": {
-    "drupal/controlled_fields": "2.0.x-dev",
-    "drupal/filter_form_values": "2.0.x-dev"
+    "drupal/controlled_fields": "^2",
+    "drupal/filter_form_values": "^2"
   },
   "repositories": [
     {
